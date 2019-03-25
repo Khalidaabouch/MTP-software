@@ -41,23 +41,41 @@ int main(int argc, char **argv){
 	uint8_t spi_txbuff[32+1];
 	uint8_t spi_rxbuff[32+1]; //+1 for the status 
 	
-	/*
-	// Commands below write the config register (00000) to 0x0f
-	spi_txbuff[0]=0x20;
-	spi_txbuff[1]=0x0f;
-	bcm2835_spi_transfern((char *) spi_txbuff,2);
-	*/
-
-	/*
-	// Commands below read the config register (00000)
-	spi_txbuff[0]=0x00;
-	spi_txbuff[1]=0x00;
-	*/
 	
-	bcm2835_spi_transfernb((char *) spi_txbuff, (char *) spi_rxbuff, 3);
+	// Commands below write the config register (00000) to 0x0a
+	spi_txbuff[0]=0x20;
+	spi_txbuff[1]=0x0a;
+	bcm2835_spi_transfern((char *) spi_txbuff,2);
+	
+	/*
+	// Commands below read the config register (00000) and the RF_STATUS (value=00000111) by def.
+	spi_txbuff[0]=0x00;
+	spi_txbuff[1]=0x06;
+	bcm2835_spi_transfernb((char *) spi_txbuff, (char *) spi_rxbuff, 4);
+	
 	for(uint8_t i =0; i<3;i++){
 		printf("Read from SPI: 0x%02X\n", *(spi_rxbuff+i));
 	}
+	*/
+	/******************** ++ CODE TO READ RX_FIFO ++ **********************/
+	// Read FIFO status:
+	uint8_t comm_to_read_rx_fifo[2];
+	comm_to_read_rx_fifo[0]=0x17;
+	*(spi_rxbuff+1)=0x11; //para que entre
+	while((*(spi_rxbuff+1))==0x11){
+
+		bcm2835_spi_transfernb((char *) comm_to_read_rx_fifo, (char * ) spi_rxbuff, 2);
+		//bcm2835_spi_transfern((char *) comm_to_read_rx_fifo, 2);
+		printf("Fifo status = 0x%02X\n", *(spi_rxbuff+1));
+	}
+	/*
+	// Read RX_FIFO
+	spi_txbuff[0]=0x61; // Read rx_fifo command(pg. 48)
+	bcm2835_spi_transfernb((char *) spi_txbuff, (char * ) spi_rxbuff, 32);
+	for(uint8_t i=0; i<32;i++){
+		printf("Fifo status = 0x%02X\n", *(spi_rxbuff+i));
+	}
+	*/
 	bcm2835_spi_end();
     	bcm2835_close();
 	return 0;

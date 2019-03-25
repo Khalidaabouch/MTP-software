@@ -32,29 +32,34 @@ int main(int argc, char **argv){
 	//Set SPi clock to 8Mhz (7.8MHz actually)
 	bcm2835SPIClockDivider(BCM2835_SPI_CLOCK_DIVIDER_32);
 	bcm2835_spi_setDataMode(BCM2835_SPI_MODE0);
-	//Every new command in the nordic must be started by a high to low transition on CSN
 	//Page 47 nordic: Command word: MSBit to LSBit
 	bcm2835_spi_setBitOrder(BCM2835_SPI_BIT_ORDER_MSBFIRST);
 	bcm2835_spi_chipSelect(BCM2835_SPI_CS0);
+	//Every new command in the nordic must be started by a high to low transition on CSN
 	bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, LOW);
 	
-	char buf[5];
-	buf[0]=0x00;
-	buf[1]=0xaa;
-	buf[2]=0xaa;
-	buf[3]=0xaa;
-	buf[4]=0xff;//data to read status reg
+	uint8_t spi_txbuff[32+1];
+	uint8_t spi_rxbuff[32+1]; //+1 for the status 
 	
-	uint8_t send_data = 0x23;
-    	uint8_t read_data = bcm2835_spi_transfer(send_data);
-   	printf("Sent to SPI: 0x%02X. Read back from SPI: 0x%02X.\n", send_data, read_data);
+	/*
+	// Commands below write the config register (00000) to 0x0f
+	spi_txbuff[0]=0x20;
+	spi_txbuff[1]=0x0f;
+	bcm2835_spi_transfern((char *) spi_txbuff,2);
+	*/
+
+	/*
+	// Commands below read the config register (00000)
+	spi_txbuff[0]=0x00;
+	spi_txbuff[1]=0x00;
+	*/
 	
-    	/*bcm2835_spi_transfern(buf, 5);
-	for(char i=0; i<5;i++){
-    	printf("Read back from SPI: 0x%02X.\n", *(buf+i));
-    	}*/
+	bcm2835_spi_transfernb((char *) spi_txbuff, (char *) spi_rxbuff, 3);
+	for(uint8_t i =0; i<3;i++){
+		printf("Read from SPI: 0x%02X\n", *(spi_rxbuff+i));
+	}
 	bcm2835_spi_end();
     	bcm2835_close();
 	return 0;
-
 }
+

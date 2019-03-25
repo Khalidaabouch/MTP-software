@@ -1,3 +1,4 @@
+
 /*
  * spi_setup_bcm.c
  *
@@ -43,11 +44,15 @@ int main(int argc, char **argv){
 	buf[2]=0xaa;
 	buf[3]=0xaa;
 	buf[4]=0xff;//data to read status reg
-
-    	bcm2835_spi_transfern(buf, 5);
+	
+	uint8_t send_data = 0x23;
+    	uint8_t read_data = bcm2835_spi_transfer(send_data);
+   	printf("Sent to SPI: 0x%02X. Read back from SPI: 0x%02X.\n", send_data, read_data);
+	
+    	/*bcm2835_spi_transfern(buf, 5);
 	for(char i=0; i<5;i++){
     	printf("Read back from SPI: 0x%02X.\n", *(buf+i));
-    	}
+    	}*/
 	bcm2835_spi_end();
     	bcm2835_close();
 	return 0;
